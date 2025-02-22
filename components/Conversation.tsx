@@ -5,6 +5,15 @@ import { useCallback } from "react";
 import { Button } from "./ui/button";
 import { GoUnmute, GoMute } from "react-icons/go";
 
+async function getSignedUrl(): Promise<string> {
+  const response = await fetch('/api/signed-url')
+  if (!response.ok) {
+      throw Error('Failed to get signed url')
+  }
+  const data = await response.json()
+  return data.signedUrl
+}
+
 export function Conversation() {
   const conversation = useConversation({
     onConnect: () => console.log("Connected"),
@@ -19,8 +28,9 @@ export function Conversation() {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // Start the conversation with your agent
+      const signedUrl = await getSignedUrl()
       await conversation.startSession({
-        agentId: process.env.CONVERSATION_AGENT_ID as string,
+        signedUrl: signedUrl,
       });
     } catch (error) {
       console.error("Failed to start conversation:", error);
@@ -30,8 +40,6 @@ export function Conversation() {
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
-
-  console.log(conversation.status)
 
   return (
     <div className="flex flex-inline">
