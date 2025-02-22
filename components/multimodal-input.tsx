@@ -18,7 +18,7 @@ import { cn, sanitizeUIMessages } from "@/lib/utils";
 import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { Conversation } from "./Conversation";
+import { Conversation } from "./conversation";
 
 const suggestedActions = [
   {

@@ -1,6 +1,8 @@
+import asyncio
 import os
 import json
 from typing import List
+from elevenlabs import ElevenLabs
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -9,11 +11,17 @@ from fastapi.responses import StreamingResponse
 from openai import OpenAI
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.tools import get_current_weather
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from concurrent.futures import TimeoutError as ConnectionTimeoutError
+from fastapi.responses import JSONResponse
+from rich.console import Console
+import websockets
 
 
 load_dotenv()
 
 app = FastAPI()
+console = Console()
 
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
@@ -160,3 +168,47 @@ async def handle_chat_data(request: Request, protocol: str = Query("data")):
     response = StreamingResponse(stream_text(openai_messages, protocol))
     response.headers["x-vercel-ai-data-stream"] = "v1"
     return response
+
+
+@app.websocket("/v1/convai/conversation?agent_id={agent_name}")
+async def handle_voice_stream(websocket: WebSocket, agent_name: str):
+    await websocket.accept()
+    ws_url = f"wss://api.elevenlabs.io/v1/convai/conversation?agent_id={agent_name}"
+
+    try:
+        async with websockets.connect(ws_url) as elevenlabs_ws:
+
+            async def forward_messages():
+                """Receive messages from the user WebSocket and forward them to Eleven Labs"""
+                while True:
+                    try:
+                        pass
+                        # TODO: Need to think how to deal with it
+                        message = await websocket.recv()
+                        await elevenlabs_ws.send(message)
+                    except WebSocketDisconnect:
+                        print(f"WebSocket disconnected for agent: {agent_name}")
+                        break
+                    except Exception as e:
+                        print(f"Error forwarding message: {e}")
+                        break
+
+            async def receive_messages():
+                """Receive messages from Eleven Labs and send them back to the user"""
+                while True:
+                    try:
+                        response = await elevenlabs_ws.recv()
+                        await websocket.send_text(response)
+                    except websockets.exceptions.ConnectionClosed:
+                        print("Eleven Labs WebSocket closed")
+                        break
+                    except Exception as e:
+                        print(f"Error receiving message: {e}")
+                        break
+
+            # Run both tasks concurrently
+            await asyncio.gather(forward_messages(), receive_messages())
+    except websockets.exceptions.WebSocketException as e:
+        print(f"Error with Eleven Labs WebSocket connection: {e}")
+    finally:
+        await websocket.close()

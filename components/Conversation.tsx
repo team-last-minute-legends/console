@@ -1,9 +1,10 @@
 "use client";
 
-import { useConversation } from "@11labs/react";
+
 import { useCallback } from "react";
 import { Button } from "./ui/button";
 import { GoUnmute, GoMute } from "react-icons/go";
+import { useConversation } from "@/hooks/useConversation";
 
 async function getSignedUrl(): Promise<string> {
   const response = await fetch('/api/signed-url')
