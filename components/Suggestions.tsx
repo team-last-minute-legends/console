@@ -39,7 +39,8 @@ export default function Suggestions({ append }: SuggestionsProps) {
           >
             <Button
               variant="ghost"
-              onClick={async () => {
+              onClick={async (event) => {
+                event.preventDefault();
                 append({
                   role: "user",
                   content: suggestedAction.title,

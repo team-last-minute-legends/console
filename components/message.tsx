@@ -8,6 +8,7 @@ import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
 import { Weather } from "./weather";
+import ItemSlider from "./item-slider";
 
 export const PreviewMessage = ({
   message,
@@ -49,10 +50,11 @@ export const PreviewMessage = ({
                 if (state === "result") {
                   const { result } = toolInvocation;
 
+                  console.log({result})
                   return (
                     <div key={toolCallId}>
-                      {toolName === "get_current_weather" ? (
-                        <Weather weatherAtLocation={result} />
+                      {toolName === "browser_search" ? (
+                        <ItemSlider items={result?.posts} />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}
@@ -67,6 +69,7 @@ export const PreviewMessage = ({
                     })}
                   >
                     {toolName === "get_current_weather" ? <Weather /> : null}
+                    {toolName === "browser_search" ? "We are browsing the web..." : null}
                   </div>
                 );
               })}
@@ -89,7 +92,7 @@ export const PreviewMessage = ({
   );
 };
 
-export const ThinkingMessage = () => {
+export const ThinkingMessage = ({message}: {message?: string}) => {
   const role = "assistant";
 
   return (
@@ -113,7 +116,7 @@ export const ThinkingMessage = () => {
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-col gap-4 text-muted-foreground">
-            Thinking...
+            {message ?? "Thinking..."}
           </div>
         </div>
       </div>
