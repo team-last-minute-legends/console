@@ -9,6 +9,7 @@ import {
   useCallback,
   type Dispatch,
   type SetStateAction,
+  useState,
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
@@ -19,6 +20,8 @@ import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Conversation } from "./conversation";
+import { useAudioRecorder } from "@/hooks/use-audio-recorder";
+import { MicrophoneIcon } from "@/app/icons";
 
 const suggestedActions = [
   {
@@ -66,6 +69,36 @@ export function MultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const { startRecording, stopRecording } = useAudioRecorder({
+    onRecordingComplete: async (audioBlob) => {
+      setIsTranscribing(true);
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.wav");
+      formData.append("model", "whisper-1");
+
+      try {
+        const response = await fetch("/api/transcribe", {
+          method: "POST",
+          body: formData,
+        });
+
+        const { text } = await response.json();
+        setInput(text);
+      } catch (error) {
+        toast.error("Failed to transcribe audio");
+      } finally {
+        setIsTranscribing(false);
+        setIsRecording(false);
+        setRecordingTime(0);
+      }
+    },
+    onTimeUpdate: (time) => setRecordingTime(time),
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -176,6 +209,34 @@ export function MultimodalInput({
 
       <div className="absolute bottom-2 right-2 m-0.5 flex">
         <Conversation />
+        <Button
+          className="rounded-full p-1.5 h-fit border dark:border-zinc-600 mr-1"
+          onClick={(event) => {
+            event.preventDefault();
+            if (isRecording) {
+              stopRecording();
+            } else {
+              setIsRecording(true);
+              startRecording();
+            }
+          }}
+          disabled={isTranscribing}
+        >
+          {isTranscribing ? (
+            <>
+              <span className="ml-2 text-xs">Transcribing...</span>
+            </>
+          ) : isRecording ? (
+            <>
+              <StopIcon size={14} />
+              <span className="ml-2 text-xs">
+                {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, "0")}
+              </span>
+            </>
+          ) : (
+            <MicrophoneIcon size={14} />
+          )}
+        </Button>
         
         {isLoading ? (
           <Button
