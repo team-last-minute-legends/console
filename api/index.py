@@ -1,7 +1,9 @@
 import asyncio
 import os
 import json
+import time
 from typing import List
+import uuid
 from elevenlabs import ElevenLabs
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from pydantic import BaseModel
@@ -9,11 +11,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
+
+from api.crew import LatestAiDevelopmentCrew, run
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.tools import get_current_weather
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from concurrent.futures import TimeoutError as ConnectionTimeoutError
 from fastapi.responses import JSONResponse
+
 from rich.console import Console
 import websockets
 
@@ -212,3 +217,56 @@ async def handle_voice_stream(websocket: WebSocket, agent_name: str):
         print(f"Error with Eleven Labs WebSocket connection: {e}")
     finally:
         await websocket.close()
+
+
+async def chat_stream(messages):
+    query_prompt = messages[-1].content
+    print(f"prompt: {query_prompt}")
+    result = run(query_prompt)
+
+    formatted_response = str(result)
+    chunk_id = f"chatcmpl-{uuid.uuid4().hex}"
+
+    lines = formatted_response.split("\n")
+
+    for i, line in enumerate(lines):
+        chunk = {
+            "id": chunk_id,
+            "object": "chat.completion.chunk",
+            "created": int(time.time()),
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": line + "\n"},
+                    "finish_reason": None,
+                }
+            ],
+        }
+        yield f"{json.dumps(chunk)}\n"
+        await asyncio.sleep(0.5)
+
+    final_chunk = {
+        "id": chunk_id,
+        "object": "chat.completion.chunk",
+        "created": int(time.time()),
+        "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+    }
+    yield f"{json.dumps(final_chunk)}\n"
+
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[Message]
+
+
+@app.post("/api/crews")
+async def chat(request: ChatRequest):
+    response = StreamingResponse(
+        chat_stream(request.messages), media_type="text/event-stream"
+    )
+    response.headers["x-vercel-ai-data-stream"] = "v1"
+    return response
