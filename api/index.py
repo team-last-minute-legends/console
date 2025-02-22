@@ -2,16 +2,22 @@ import asyncio
 import os
 import json
 import time
-from typing import List
 import uuid
+from typing import List
+from datetime import datetime
+from browser_use import Agent
 from elevenlabs import ElevenLabs
-from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
 
+from langchain_openai import ChatOpenAI
+from browser_use import ActionResult, Agent, AgentHistoryList
+from openai.types.chat import ChatCompletionMessageParam
+from api.browser_use import run_browser_use
 from api.crew import LatestAiDevelopmentCrew, run
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.tools import get_current_weather
@@ -68,7 +74,7 @@ def do_stream(messages: List[ChatCompletionMessageParam]):
                         "required": ["latitude", "longitude"],
                     },
                 },
-            }
+            },
         ],
     )
 
@@ -270,3 +276,19 @@ async def chat(request: ChatRequest):
     )
     response.headers["x-vercel-ai-data-stream"] = "v1"
     return response
+
+
+class BrowseruseRequest(BaseModel):
+    query: str
+
+
+@app.post("/api/browseruse")
+async def browseruse(request: BrowseruseRequest):
+    try:
+        result = await run_browser_use(request.query)
+        converted_agent_data = json.loads(result)
+        return {"result": converted_agent_data}
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return {"result": None}
