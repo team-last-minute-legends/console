@@ -9,11 +9,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
+
+from api.crew import LatestAiDevelopmentCrew
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.tools import get_current_weather
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from concurrent.futures import TimeoutError as ConnectionTimeoutError
 from fastapi.responses import JSONResponse
+
 from rich.console import Console
 import websockets
 
@@ -160,7 +163,7 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = "dat
             )
 
 
-@app.post("/api/chat")
+@app.post("/api/chats")
 async def handle_chat_data(request: Request, protocol: str = Query("data")):
     messages = request.messages
     openai_messages = convert_to_openai_messages(messages)
@@ -212,3 +215,31 @@ async def handle_voice_stream(websocket: WebSocket, agent_name: str):
         print(f"Error with Eleven Labs WebSocket connection: {e}")
     finally:
         await websocket.close()
+
+
+async def chat_stream(messages):
+    conversation = "\n".join([f"{msg.role}: {msg.content}" for msg in messages])
+    inputs = {"topic": "AI Agents"}
+
+    shopping_crew_response = LatestAiDevelopmentCrew().crew().kickoff(inputs=inputs)
+    for word in shopping_crew_response.split():
+        yield f"data: {word} \n\n"
+        await asyncio.sleep(0.05)
+
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[Message]
+
+
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    response = StreamingResponse(
+        chat_stream(request.messages), media_type="text/event-stream"
+    )
+    response.headers["x-vercel-ai-data-stream"] = "v1"
+    return response
