@@ -9,15 +9,12 @@ ShopMate is a multi-agent AI-powered shopping assistant that leverages Eleven La
 ## How to use
 
 Run [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
-
 ```bash
 npx create-next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
 ```
-
 ```bash
 yarn create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
 ```
-
 ```bash
 pnpm create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
 ```
@@ -27,3 +24,4 @@ pnpm create next-app --example https://github.com/vercel-labs/ai-sdk-preview-pyt
 2. ElevenLabs Agent (https://elevenlabs.io/conversational-ai) -> Conversational AI Agent
 3. Browser Use - (https://github.com/browser-use/browser-use) -> Search Browse
 4. Crew AI - (https://www.crewai.com/) -> Multi Agent Platform
+5. OpenAI - (https://openai.com/) -> 4o model
