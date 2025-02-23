@@ -30,7 +30,7 @@ async def run_browser_use(query: str):
     try:
         browser = Browser(
             config=BrowserConfig(
-                headless=True,
+                headless=False,
             )
         )
 
@@ -40,7 +40,7 @@ async def run_browser_use(query: str):
             max_actions_per_step=100,
             browser=browser,
             controller=controller,
-            register_new_step_callback=new_step_callback,
+            # register_new_step_callback=new_step_callback,
         )
         history = await agent.run()
         result = history.final_result()

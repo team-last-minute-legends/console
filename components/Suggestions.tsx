@@ -11,7 +11,7 @@ const suggestedActions = [
     icon: Globe,
   },
   {
-    title: "Find popular white kurta in myntra", 
+    title: "Go to www.myntra.com, find red mens T-shirts, give me top 2 from list", 
     label: "Myntra",
     icon: UtensilsIcon,
   },

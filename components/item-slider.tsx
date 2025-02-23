@@ -34,17 +34,12 @@ const ItemSlider = ({items = []} : ItemSlidetProps) => {
              style={{
                transform: `translateX(-${(currentIndex / items.length) * 100}%)`,
              }}>
-          {items.map((item, index) => (
+          {items.filter((i) => i.price > 0).map((item, index) => (
             <div key={index} className="w-1/3 flex-shrink-0 p-4">
               <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <a href={item.url} className="block">
-                  <img 
-                    src={item.image} 
-                    alt={item.title}
-                    className="w-full h-48 object-cover"
-                  />
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-2 truncate">
+                    <h3 className="text-lg font-semibold mb-2">
                       {item.title}
                     </h3>
                     <p className="text-blue-600 font-bold">

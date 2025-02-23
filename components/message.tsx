@@ -49,15 +49,18 @@ export const PreviewMessage = ({
 
                 if (state === "result") {
                   const { result } = toolInvocation;
+                  
+                  let render = null
+                  if(toolName === "browser_search") {   
+                    const response = JSON.parse(result)
+                    render = <ItemSlider items={response?.posts} />
+                  } else {
+                    render = <pre>{JSON.stringify(result, null, 2)}</pre>
+                  }
 
-                  console.log({result})
                   return (
                     <div key={toolCallId}>
-                      {toolName === "browser_search" ? (
-                        <ItemSlider items={result?.posts} />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
+                      {render}
                     </div>
                   );
                 }
