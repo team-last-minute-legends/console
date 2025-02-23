@@ -21,3 +21,9 @@ yarn create next-app --example https://github.com/vercel-labs/ai-sdk-preview-pyt
 ```bash
 pnpm create next-app --example https://github.com/vercel-labs/ai-sdk-preview-python-streaming ai-sdk-preview-python-streaming-example
 ```
+
+## Tech Stack used - 
+1. Loveable.dev (https://lovable.dev/) -> creating quick webapp
+2. ElevenLabs Agent (https://elevenlabs.io/conversational-ai) -> Conversational AI Agent
+3. Browser Use - (https://github.com/browser-use/browser-use) -> Search Browse
+4. Crew AI - (https://www.crewai.com/) -> Multi Agent Platform
